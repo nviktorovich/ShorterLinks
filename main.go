@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"net/http"
+
+	serverfunctions "github.com/nviktorovich/ShorterLinks/serverFunctions"
+)
 
 func main() {
-	fmt.Println("Start new project")
+	titlePageHandler := &serverfunctions.LongLinkHandler{}
+	http.Handle("/title", titlePageHandler)
+	http.ListenAndServe(":8080", nil)
 }
