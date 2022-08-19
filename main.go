@@ -7,7 +7,9 @@ import (
 )
 
 func main() {
-	titlePageHandler := &serverfunctions.LongLinkHandler{}
+	titlePageHandler := &serverfunctions.WellcomeHandler{}
+	shortLinkGenerateHandler := &serverfunctions.LinkGenerateHandler{}
 	http.Handle("/title", titlePageHandler)
+	http.Handle("/send", shortLinkGenerateHandler)
 	http.ListenAndServe(":8080", nil)
 }
