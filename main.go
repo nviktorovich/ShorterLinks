@@ -3,13 +3,11 @@ package main
 import (
 	"net/http"
 
-	serverfunctions "github.com/nviktorovich/ShorterLinks/serverFunctions"
+	"github.com/nviktorovich/ShorterLinks/programs"
 )
 
 func main() {
-	titlePageHandler := &serverfunctions.WellcomeHandler{}
-	shortLinkGenerateHandler := &serverfunctions.LinkGenerateHandler{}
-	http.Handle("/title", titlePageHandler)
-	http.Handle("/send", shortLinkGenerateHandler)
+	hndlr := &programs.TitleHandler{}
+	http.Handle("/hello", hndlr)
 	http.ListenAndServe(":8080", nil)
 }
