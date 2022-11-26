@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- The text field -->
+<label for="myInput"></label><input type="text" value="localhost:8080%s" id="myInput">
+
+<!-- The button used to copy the text -->
+<button onclick="myFunction()">Copy link</button>
+</body>
+</html>
+
+<script>
+    function myFunction() {
+// Get the text field
+        var copyText = document.getElementById("myInput");
+
+// Select the text field
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+
+// Copy the text inside the text field
+        navigator.clipboard.writeText(copyText.value);
+
+// Alert the copied text
+
+    }
+</script>

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	PREFIX = "http://localhost:8080/NVSL/"
+	PREFIX = "/NVSL/"
 )
 
 // Link специальная структура, позволяющая обрабатывать ссылки
