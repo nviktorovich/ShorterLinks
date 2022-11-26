@@ -2,6 +2,7 @@ package DBEnv
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
@@ -16,6 +17,7 @@ type Base struct {
 }
 
 func NewBase(settings string) *Base {
+	fmt.Println("in DB")
 	db, err := sql.Open("postgres", settings)
 	return &Base{
 		DataBase: db,

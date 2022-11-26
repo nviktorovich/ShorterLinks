@@ -2,7 +2,6 @@ package LinkEnv
 
 import (
 	"LinksShortner/project/DBEnv"
-	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -79,7 +78,6 @@ func SearchInDB(short string) (original string) {
 		}
 	}
 
-	fmt.Println(oneLink.Id)
 	return oneLink.Original
 
 }

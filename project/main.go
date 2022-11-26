@@ -1,15 +1,11 @@
 package main
 
 import (
-	"LinksShortner/project/LinkEnv"
-	"fmt"
+	"LinksShortner/project/ServerEnv"
 )
 
 func main() {
 
-	l := LinkEnv.NewLink("https://gobyexample.com/random-numbers")
-	l.WriteToBD()
+	ServerEnv.RunServer()
 
-	s := LinkEnv.SearchInDB("https://2")
-	fmt.Println(s)
 }
