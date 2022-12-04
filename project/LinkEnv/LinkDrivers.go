@@ -2,6 +2,7 @@ package LinkEnv
 
 import (
 	"LinksShortner/project/DBEnv"
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -29,55 +30,82 @@ func NewLink(original string) *Link {
 }
 
 // GenerateShort функция, предназначена для генерации короткой строки, строка
-// состоит из префикса "NVSL" и рандомной цифровой части
+// состоит из префикса "NVSL" и рандомной цифровой части данная реализация
+// является критически ошибочной, поскольку в теории возможна генерация
+// нескольких одинаковых коротких цифровых составляющих, но для учебного проекта,
+// подойдет.
 func GenerateShort() string {
 	source := rand.NewSource(time.Now().UnixNano())
 	randomNumber := rand.New(source)
 	return PREFIX + strconv.Itoa(randomNumber.Intn(999999999))
 }
 
-// WriteToBD метод струкруты Link, предназначен для создания записи в базе
-// данных. Id записи не передается и создается, непосредственно во время записи в
-// БД
-func (l *Link) WriteToBD() {
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-
-	_, err := DB.DataBase.Exec("insert into links (original,short) values ($1, $2)",
-		l.Original,
-		l.Short,
-	)
-	if err != nil {
-		DB.Err = err
-		log.Print(err)
+// CheckRow - метод для объекта Link, проверяет, существует ли переданная ссылка
+// в БД, если существует, возвращает true, иначе - false
+func (l *Link) CheckRow() bool {
+	var check bool
+	// в объектке Link могут содержаться обе ссылки, и оригинальная и короткая.
+	// Поэтому необходимо проверять оба варианта
+	if l.Original != "" {
+		return DBCheckQuery("original", l.Original)
+	} else if l.Short != "" {
+		return DBCheckQuery("short", l.Short)
 	}
-	defer DB.Close()
+	return check
 }
 
-// SearchInDB принимает на вход строку (короткую ссылку short) и возвращает
-// строку (исходную ссылку original). Поиск осуществляется по совпадению короткой
-// ссылки с полем short в таблице link. Поиск ведется до первого совпадения, установлен параметр LIMIT 1.
-// внутри функции создается объект типа Link - oneLink.
-func SearchInDB(short string) (original string) {
+// GetRow - метод, который возвращает заполненную структуру Link
+func (l *Link) GetRow() {
 	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	rows, err := DB.DataBase.Query("SELECT * FROM links WHERE short = $1 LIMIT 1", short)
-
-	if err != nil {
-		DB.Err = err
-		log.Print(err)
-	}
-
-	defer DB.Close()
-
-	oneLink := &Link{}
-	for rows.Next() {
-		err = rows.Scan(&oneLink.Id, &oneLink.Original, &oneLink.Short)
+	if l.Original != "" {
+		qr := fmt.Sprintf("SELECT * FROM links WHERE original = '%s' LIMIT(1)", l.Original)
+		row, err := DB.DataBase.Query(qr)
 		if err != nil {
-			DB.Err = err
-			log.Print(err)
-			continue
+			log.Println(err)
+		}
+		for row.Next() {
+			row.Scan(&l.Id, &l.Original, &l.Short)
+		}
+	} else if l.Short != "" {
+		qr := fmt.Sprintf("SELECT * FROM links WHERE short = '%s' LIMIT(1)", l.Short)
+		row, err := DB.DataBase.Query(qr)
+		if err != nil {
+			log.Println(err)
+		}
+		for row.Next() {
+			row.Scan(&l.Id, &l.Original, &l.Short)
 		}
 	}
+}
 
-	return oneLink.Original
+// WriteRow - метод, который создает запись в БД, для создания записи необходимо
+// сгенерировать короткую ссылку
+func (l *Link) WriteRow() {
+	DB := DBEnv.NewBase(DBEnv.SETTINGS)
+	qr := fmt.Sprintf("INSERT INTO links (original, short) VALUES('%s', '%s')", l.Original, l.Short)
+	DB.DataBase.Exec(qr)
+}
+
+// DBCheckQuery на вход подается два параметра - строки, название поля и значение
+// поля. На выходе булево значение. Если в БД существует поле с таким значением,
+// то возвращается true, если нет - false
+func DBCheckQuery(fieldName, fieldValue string) bool {
+	var i int
+	DB := DBEnv.NewBase(DBEnv.SETTINGS)
+	qr := fmt.Sprintf("SELECT count(id) FROM links WHERE %s = '%s'", fieldName, fieldValue)
+	row, err := DB.DataBase.Query(qr)
+	if err != nil {
+		log.Println(err)
+	}
+	for row.Next() {
+		err = row.Scan(&i)
+
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	fmt.Println(i)
+
+	return i != 0
 
 }

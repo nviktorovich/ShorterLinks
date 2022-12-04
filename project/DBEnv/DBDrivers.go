@@ -2,11 +2,13 @@ package DBEnv
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 )
 
-const SETTINGS = "user=postgres password=2005760 dbname=postgres sslmode=disable"
+const (
+	SETTINGS    = "user=postgres password=2005760 dbname=postgres sslmode=disable"
+	DRIVER_NAME = "postgres"
+)
 
 // Base структура, предназначенная для работы с конкретным объектом базой данных
 // DataBase - объект базы данных
@@ -17,8 +19,7 @@ type Base struct {
 }
 
 func NewBase(settings string) *Base {
-	fmt.Println("in DB")
-	db, err := sql.Open("postgres", settings)
+	db, err := sql.Open(DRIVER_NAME, settings)
 	return &Base{
 		DataBase: db,
 		Err:      err,
