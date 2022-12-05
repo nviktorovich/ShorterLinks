@@ -25,8 +25,7 @@ type Link struct {
 
 // NewLink функция, возвращает объект типа Link, для создания необходима оригинальная ссылка
 func NewLink(original string) *Link {
-	short := GenerateShort()
-	return &Link{Id: 0, Original: original, Short: short}
+	return &Link{Id: 0, Original: original, Short: ""}
 }
 
 // GenerateShort функция, предназначена для генерации короткой строки, строка
@@ -57,6 +56,7 @@ func (l *Link) CheckRow() bool {
 // GetRow - метод, который возвращает заполненную структуру Link
 func (l *Link) GetRow() {
 	DB := DBEnv.NewBase(DBEnv.SETTINGS)
+	defer DB.DataBase.Close()
 	if l.Original != "" {
 		qr := fmt.Sprintf("SELECT * FROM links WHERE original = '%s' LIMIT(1)", l.Original)
 		row, err := DB.DataBase.Query(qr)
@@ -84,6 +84,7 @@ func (l *Link) WriteRow() {
 	DB := DBEnv.NewBase(DBEnv.SETTINGS)
 	qr := fmt.Sprintf("INSERT INTO links (original, short) VALUES('%s', '%s')", l.Original, l.Short)
 	DB.DataBase.Exec(qr)
+	defer DB.DataBase.Close()
 }
 
 // DBCheckQuery на вход подается два параметра - строки, название поля и значение
@@ -104,7 +105,7 @@ func DBCheckQuery(fieldName, fieldValue string) bool {
 			log.Println(err)
 		}
 	}
-	fmt.Println(i)
+	defer DB.DataBase.Close()
 
 	return i != 0
 
