@@ -58,6 +58,9 @@ func RunServer() {
 				linkObj.Short = LinkEnv.GenerateShort()
 				LinkEnv.WriteRowToDB(linkObj)
 				LinkEnv.GetRowFromDB(linkObj)
+				// создаем новый объект типа Counter, и делаем запись в БД, значение счетчика равно 0
+				counterObj := LinkEnv.NewCounter(linkObj.Id)
+				LinkEnv.WriteRowToDB(counterObj)
 				if _, err := fmt.Fprintf(writer, page, linkObj.Short); err != nil {
 					log.Fatal(err)
 				}
@@ -80,8 +83,21 @@ func RunServer() {
 			linkObj := LinkEnv.NewLink("")
 			linkObj.Short = request.RequestURI
 			res := LinkEnv.CheckRowInDB(linkObj)
+			countObj := LinkEnv.NewCounter(0)
 			if res {
 				LinkEnv.GetRowFromDB(linkObj)
+				countObj.FkLinkId = linkObj.Id
+
+				if LinkEnv.CheckRowInDB(countObj) {
+					LinkEnv.GetRowFromDB(countObj)
+					countObj.CntIncrement()
+
+				} else {
+					LinkEnv.WriteRowToDB(countObj)
+					LinkEnv.GetRowFromDB(countObj)
+					countObj.CntIncrement()
+				}
+
 				http.Redirect(writer, request, linkObj.Original, http.StatusSeeOther)
 				// добавить функционал наращивания значения счетчика
 			} else {

@@ -28,7 +28,7 @@ func (c *Counter) CheckRow() bool {
 	var check int
 
 	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	qr := fmt.Sprintf("SELECT count(id) FROM counters WHERE %s = '%s'", "fk_link_id", c.FkLinkId)
+	qr := fmt.Sprintf("SELECT count(id) FROM counters WHERE %s = %d", "fk_link_id", c.FkLinkId)
 	row, err := DB.DataBase.Query(qr)
 
 	if err != nil {
@@ -59,7 +59,7 @@ func (c *Counter) WriteRow() {
 func (c *Counter) GetRow() {
 	DB := DBEnv.NewBase(DBEnv.SETTINGS)
 	defer DB.DataBase.Close()
-	qr := fmt.Sprintf("SELECT * FROM counter WHERE fk_link_id = %d LIMIT(1)", c.FkLinkId)
+	qr := fmt.Sprintf("SELECT * FROM counters WHERE fk_link_id = %d LIMIT(1)", c.FkLinkId)
 	row, err := DB.DataBase.Query(qr)
 	if err != nil {
 		log.Println(err)
@@ -70,7 +70,12 @@ func (c *Counter) GetRow() {
 }
 
 // CntIncrement - метод для объекта Counter, увеличивает на 1 значение счетчика.
-// Запись в БД не производиться, необходимо использовать соответствующий метод отдельно.
 func (c *Counter) CntIncrement() {
 	c.Counter += 1
+	DB := DBEnv.NewBase(DBEnv.SETTINGS)
+	defer DB.DataBase.Close()
+	qr := fmt.Sprintf("UPDATE counters SET counter = %d WHERE id = %d", c.Counter, c.Id)
+	if _, err := DB.DataBase.Exec(qr); err != nil {
+		log.Println(err)
+	}
 }
