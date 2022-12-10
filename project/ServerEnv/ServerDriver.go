@@ -1,6 +1,7 @@
 package ServerEnv
 
 import (
+	"LinksShortner/project/Configuration"
 	"LinksShortner/project/LinkEnv"
 	"fmt"
 	"log"
@@ -10,13 +11,14 @@ import (
 
 func RunServer() {
 
-	http.HandleFunc("/OriginalToShort", func(writer http.ResponseWriter, request *http.Request) {
+	http.HandleFunc(Configuration.MainPage, func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
-			page, err := GetStringFromFile("project/HTMLForms/Title.html")
+			page, err := GetStringFromFile(Configuration.TitlePath)
 			if err != nil {
 				log.Fatal(err)
 			}
+			page = fmt.Sprintf(page, "http://"+Configuration.Address+Configuration.ShortPage)
 			if _, err := fmt.Fprintln(writer, page); err != nil {
 				log.Fatal(err)
 			}
@@ -33,8 +35,8 @@ func RunServer() {
 
 	})
 
-	http.HandleFunc("/Short", func(writer http.ResponseWriter, request *http.Request) {
-		page, err := GetStringFromFile("project/HTMLForms/Short.html")
+	http.HandleFunc(Configuration.ShortPage, func(writer http.ResponseWriter, request *http.Request) {
+		page, err := GetStringFromFile(Configuration.ShortPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +53,8 @@ func RunServer() {
 			res := LinkEnv.CheckRowInDB(linkObj)
 			if res {
 				LinkEnv.GetRowFromDB(linkObj)
-				if _, err := fmt.Fprintf(writer, page, linkObj.Short); err != nil {
+				page = fmt.Sprintf(page, Configuration.Address+linkObj.Short)
+				if _, err := fmt.Fprintln(writer, page); err != nil { // здесь работаем с параметром %s
 					log.Fatal(err)
 				}
 			} else {
@@ -61,7 +64,9 @@ func RunServer() {
 				// создаем новый объект типа Counter, и делаем запись в БД, значение счетчика равно 0
 				counterObj := LinkEnv.NewCounter(linkObj.Id)
 				LinkEnv.WriteRowToDB(counterObj)
-				if _, err := fmt.Fprintf(writer, page, linkObj.Short); err != nil {
+				page = fmt.Sprintf(page, Configuration.Address+linkObj.Short)
+
+				if _, err := fmt.Fprintln(writer, page); err != nil {
 					log.Fatal(err)
 				}
 			}
@@ -77,7 +82,7 @@ func RunServer() {
 		}
 	})
 
-	http.HandleFunc("/NVSL/", func(writer http.ResponseWriter, request *http.Request) {
+	http.HandleFunc(Configuration.RedirectPage, func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case "GET":
 			linkObj := LinkEnv.NewLink("")
@@ -125,7 +130,7 @@ func RunServer() {
 		}
 	})
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(Configuration.Address, nil); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -3,4 +3,10 @@
 prefix: /NVSL/ # префикс необходим для того, чтобы формировать итоговый адрес, и гарантированно захватываться хендлером
 db_init: user=postgres password=2005760 dbname=postgres sslmode=disable
 driver_name: postgres
+main_page: /OriginalToShort # заглавная страница сервиса
+title_path: project/HTMLForms/Title.html # путь до файла заглавной страницы
+short_page: /Short # страница с презентацией короткой ссылки
+short_path: project/HTMLForms/Short.html # путь до файла страницы с презентацией коротких ссылок
+redirect_page: /NVSL/ # страница для переадресации
+address: 192.168.1.191:8080
 
