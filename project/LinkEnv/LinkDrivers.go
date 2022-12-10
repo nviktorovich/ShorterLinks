@@ -1,16 +1,13 @@
 package LinkEnv
 
 import (
+	"LinksShortner/project/Configuration"
 	"LinksShortner/project/DBEnv"
 	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
 	"time"
-)
-
-const (
-	PREFIX = "/NVSL/"
 )
 
 // Link специальная структура, позволяющая обрабатывать ссылки
@@ -36,7 +33,7 @@ func NewLink(original string) *Link {
 func GenerateShort() string {
 	source := rand.NewSource(time.Now().UnixNano())
 	randomNumber := rand.New(source)
-	return PREFIX + strconv.Itoa(randomNumber.Intn(999999999))
+	return Configuration.Prefix + strconv.Itoa(randomNumber.Intn(999999999))
 }
 
 // CheckRow - метод для объекта Link, проверяет, существует ли переданная ссылка
@@ -55,23 +52,16 @@ func (l *Link) CheckRow() bool {
 
 // GetRow - метод, который возвращает заполненную структуру Link
 func (l *Link) GetRow() {
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	defer DB.DataBase.Close()
+
 	if l.Original != "" {
-		qr := fmt.Sprintf("SELECT * FROM links WHERE original = '%s' LIMIT(1)", l.Original)
-		row, err := DB.DataBase.Query(qr)
-		if err != nil {
-			log.Println(err)
-		}
+
+		row := DBEnv.DoQuery(fmt.Sprintf("SELECT * FROM links WHERE original = '%s' LIMIT(1)", l.Original))
 		for row.Next() {
 			row.Scan(&l.Id, &l.Original, &l.Short)
 		}
 	} else if l.Short != "" {
-		qr := fmt.Sprintf("SELECT * FROM links WHERE short = '%s' LIMIT(1)", l.Short)
-		row, err := DB.DataBase.Query(qr)
-		if err != nil {
-			log.Println(err)
-		}
+		row := DBEnv.DoQuery(fmt.Sprintf("SELECT * FROM links WHERE short = '%s' LIMIT(1)", l.Short))
+
 		for row.Next() {
 			row.Scan(&l.Id, &l.Original, &l.Short)
 		}
@@ -81,10 +71,8 @@ func (l *Link) GetRow() {
 // WriteRow - метод, который создает запись в БД, для создания записи необходимо
 // сгенерировать короткую ссылку
 func (l *Link) WriteRow() {
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	qr := fmt.Sprintf("INSERT INTO links (original, short) VALUES('%s', '%s')", l.Original, l.Short)
-	DB.DataBase.Exec(qr)
-	defer DB.DataBase.Close()
+
+	DBEnv.DoExec(fmt.Sprintf("INSERT INTO links (original, short) VALUES('%s', '%s')", l.Original, l.Short))
 }
 
 // DBCheckQuery на вход подается два параметра - строки, название поля и значение
@@ -92,20 +80,15 @@ func (l *Link) WriteRow() {
 // то возвращается true, если нет - false
 func DBCheckQuery(fieldName, fieldValue string) bool {
 	var i int
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	qr := fmt.Sprintf("SELECT count(id) FROM links WHERE %s = '%s'", fieldName, fieldValue)
-	row, err := DB.DataBase.Query(qr)
-	if err != nil {
-		log.Println(err)
-	}
+
+	row := DBEnv.DoQuery(fmt.Sprintf("SELECT count(id) FROM links WHERE %s = '%s'", fieldName, fieldValue))
 	for row.Next() {
-		err = row.Scan(&i)
+		err := row.Scan(&i)
 
 		if err != nil {
 			log.Println(err)
 		}
 	}
-	defer DB.DataBase.Close()
 
 	return i != 0
 

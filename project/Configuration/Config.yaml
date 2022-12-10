@@ -1,0 +1,6 @@
+# Конфигурационный файл, в нем должны содержаться строковые константы
+
+prefix: /NVSL/ # префикс необходим для того, чтобы формировать итоговый адрес, и гарантированно захватываться хендлером
+db_init: user=postgres password=2005760 dbname=postgres sslmode=disable
+driver_name: postgres
+

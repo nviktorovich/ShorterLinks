@@ -27,20 +27,12 @@ func NewCounter(FkLinkId int) *Counter {
 func (c *Counter) CheckRow() bool {
 	var check int
 
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	qr := fmt.Sprintf("SELECT count(id) FROM counters WHERE %s = %d", "fk_link_id", c.FkLinkId)
-	row, err := DB.DataBase.Query(qr)
-
-	if err != nil {
-		log.Println(err)
-	}
-
+	row := DBEnv.DoQuery(fmt.Sprintf("SELECT count(id) FROM counters WHERE %s = %d", "fk_link_id", c.FkLinkId))
 	for row.Next() {
-		if err = row.Scan(&check); err != nil {
+		if err := row.Scan(&check); err != nil {
 			log.Println(err)
 		}
 	}
-	defer DB.DataBase.Close()
 
 	return check != 0
 }
@@ -48,34 +40,25 @@ func (c *Counter) CheckRow() bool {
 // WriteRow - метод для объекта Counter, создает запись в таблице counters,
 // обязательный аргумент - значение ключа-ссылки на таблицу link (FkLinkId)
 func (c *Counter) WriteRow() {
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	defer DB.DataBase.Close()
-	qr := fmt.Sprintf("INSERT INTO counters (fk_link_id, counter) VALUES(%d, %d)", c.FkLinkId, c.Counter)
-	DB.DataBase.Exec(qr)
+	DBEnv.DoExec(fmt.Sprintf("INSERT INTO counters (fk_link_id, counter) VALUES(%d, %d)", c.FkLinkId, c.Counter))
 }
 
 // GetRow - метод для объекта Counter, возвращает значения всех полей объекта,
 // запрос производиться по значению fk_link_id
 func (c *Counter) GetRow() {
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	defer DB.DataBase.Close()
-	qr := fmt.Sprintf("SELECT * FROM counters WHERE fk_link_id = %d LIMIT(1)", c.FkLinkId)
-	row, err := DB.DataBase.Query(qr)
-	if err != nil {
-		log.Println(err)
-	}
+
+	row := DBEnv.DoQuery(fmt.Sprintf("SELECT * FROM counters WHERE fk_link_id = %d LIMIT(1)", c.FkLinkId))
+
 	for row.Next() {
-		row.Scan(&c.Id, &c.FkLinkId, &c.Counter)
+		err := row.Scan(&c.Id, &c.FkLinkId, &c.Counter)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
 // CntIncrement - метод для объекта Counter, увеличивает на 1 значение счетчика.
 func (c *Counter) CntIncrement() {
 	c.Counter += 1
-	DB := DBEnv.NewBase(DBEnv.SETTINGS)
-	defer DB.DataBase.Close()
-	qr := fmt.Sprintf("UPDATE counters SET counter = %d WHERE id = %d", c.Counter, c.Id)
-	if _, err := DB.DataBase.Exec(qr); err != nil {
-		log.Println(err)
-	}
+	DBEnv.DoExec(fmt.Sprintf("UPDATE counters SET counter = %d WHERE id = %d", c.Counter, c.Id))
 }
